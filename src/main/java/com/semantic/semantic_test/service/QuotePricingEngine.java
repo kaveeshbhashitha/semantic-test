@@ -58,6 +58,16 @@ public class QuotePricingEngine {
 					log.info("coupon_rejected couponCode={} reason=subtotal_too_low subtotal={}", normalized, subtotal);
 					throw new InvalidCouponException(normalized, "Subtotal must be >= 100.00 for SAVE10");
 				}
+			} else if (normalized.equals("BLACKFRIDAY")) {
+				if (foodSubtotal.compareTo(Money.zero()) > 0 || medicalSubtotal.compareTo(Money.zero()) > 0) {
+					log.info("coupon_rejected couponCode={} reason=contains_exempt_categories", normalized);
+					throw new InvalidCouponException(normalized, "BLACKFRIDAY cannot be applied to FOOD or MEDICAL items");
+				}
+
+				BigDecimal eligible = Money.max(subtotal, Money.zero());
+				BigDecimal percent = eligible.multiply(new BigDecimal("0.15"));
+				BigDecimal capped = Money.min(Money.round2(percent), new BigDecimal("50.00"));
+				couponDiscount = capped;
 			} else if (normalized.equals("FREESHIP")) {
 				couponDiscount = Money.zero();
 			} else {
