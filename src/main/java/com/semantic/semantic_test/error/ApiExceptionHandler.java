@@ -32,6 +32,20 @@ public class ApiExceptionHandler {
 		));
 	}
 
+	@ExceptionHandler(IdempotencyConflictException.class)
+	public ResponseEntity<ApiErrorResponse> handleIdempotencyConflict(IdempotencyConflictException ex) {
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiErrorResponse(
+				Instant.now(),
+				"CONFLICT",
+				ex.getMessage(),
+				java.util.List.of(
+						"idempotencyKey=" + ex.getIdempotencyKey(),
+						"existingCustomerId=" + ex.getExistingCustomerId(),
+						"requestedCustomerId=" + ex.getRequestedCustomerId()
+				)
+		));
+	}
+
 	@ExceptionHandler(QuoteNotFoundException.class)
 	public ResponseEntity<ApiErrorResponse> handleNotFound(QuoteNotFoundException ex) {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiErrorResponse(

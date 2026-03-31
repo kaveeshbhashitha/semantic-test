@@ -9,6 +9,7 @@ import com.semantic.semantic_test.domain.Quote;
 import com.semantic.semantic_test.domain.QuoteItem;
 import com.semantic.semantic_test.domain.QuotePricing;
 import com.semantic.semantic_test.domain.QuoteRisk;
+import com.semantic.semantic_test.error.IdempotencyConflictException;
 import com.semantic.semantic_test.error.QuoteNotFoundException;
 import com.semantic.semantic_test.repo.QuoteRepository;
 import java.math.BigDecimal;
@@ -56,6 +57,10 @@ public class QuoteService {
 		if (normalizedKey != null) {
 			var existing = idempotencyStore.getQuoteId(normalizedKey).flatMap(quoteRepository::findById);
 			if (existing.isPresent()) {
+				String existingCustomerId = existing.get().customerId();
+				if (!existingCustomerId.equals(request.customerId())) {
+					throw new IdempotencyConflictException(normalizedKey, existingCustomerId, request.customerId());
+				}
 				return toResponse(existing.get());
 			}
 		}
