@@ -29,7 +29,8 @@ public class QuotePricingEngine {
 		BigDecimal medicalSubtotal = Money.zero();
 
 		for (QuoteItem item : items) {
-			BigDecimal line = Money.mul(item.unitPrice(), item.quantity());
+			BigDecimal normalizedUnitPrice = Money.round2(item.unitPrice());
+			BigDecimal line = Money.mul(normalizedUnitPrice, item.quantity());
 			subtotal = Money.add(subtotal, line);
 			if (item.category() == ItemCategory.LUXURY) {
 				luxurySubtotal = Money.add(luxurySubtotal, line);
