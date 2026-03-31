@@ -22,6 +22,16 @@ public class ApiExceptionHandler {
 		));
 	}
 
+	@ExceptionHandler(InvalidCouponException.class)
+	public ResponseEntity<ApiErrorResponse> handleInvalidCoupon(InvalidCouponException ex) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiErrorResponse(
+				Instant.now(),
+				"BAD_REQUEST",
+				ex.getMessage(),
+				java.util.List.of("couponCode=" + ex.getCouponCode(), "reason=" + ex.getReason())
+		));
+	}
+
 	@ExceptionHandler(QuoteNotFoundException.class)
 	public ResponseEntity<ApiErrorResponse> handleNotFound(QuoteNotFoundException ex) {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiErrorResponse(

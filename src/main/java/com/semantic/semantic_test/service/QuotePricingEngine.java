@@ -4,6 +4,7 @@ import com.semantic.semantic_test.api.dto.CustomerTier;
 import com.semantic.semantic_test.api.dto.ItemCategory;
 import com.semantic.semantic_test.domain.QuoteItem;
 import com.semantic.semantic_test.domain.QuotePricing;
+import com.semantic.semantic_test.error.InvalidCouponException;
 import com.semantic.semantic_test.util.Money;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -49,12 +50,18 @@ public class QuotePricingEngine {
 		BigDecimal couponDiscount = Money.zero();
 		if (couponCode != null && !couponCode.trim().isEmpty()) {
 			String normalized = couponCode.trim().toUpperCase();
-			if (normalized.equals("SAVE10") && subtotal.compareTo(new BigDecimal("100.00")) >= 0) {
-				couponDiscount = new BigDecimal("10.00");
+			if (normalized.equals("SAVE10")) {
+				if (subtotal.compareTo(new BigDecimal("100.00")) >= 0) {
+					couponDiscount = new BigDecimal("10.00");
+				} else {
+					log.info("coupon_rejected couponCode={} reason=subtotal_too_low subtotal={}", normalized, subtotal);
+					throw new InvalidCouponException(normalized, "Subtotal must be >= 100.00 for SAVE10");
+				}
 			} else if (normalized.equals("FREESHIP")) {
 				couponDiscount = Money.zero();
 			} else {
-				log.info("coupon_ignored couponCode={} reason=unknown_or_not_eligible", normalized);
+				log.info("coupon_rejected couponCode={} reason=unknown", normalized);
+				throw new InvalidCouponException(normalized, "Unknown coupon code");
 			}
 		}
 
