@@ -90,6 +90,10 @@ public class QuoteService {
 		return toResponse(quote);
 	}
 
+	public List<QuoteResponse> listQuotes() {
+		return quoteRepository.findAll().stream().map(QuoteService::toResponse).toList();
+	}
+
 	private static QuoteResponse toResponse(Quote quote) {
 		QuotePricing p = quote.pricing();
 		QuoteRisk r = quote.risk();

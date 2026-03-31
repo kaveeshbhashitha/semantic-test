@@ -3,6 +3,7 @@ package com.semantic.semantic_test.api;
 import com.semantic.semantic_test.api.dto.QuoteRequest;
 import com.semantic.semantic_test.api.dto.QuoteResponse;
 import com.semantic.semantic_test.service.QuoteService;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +31,11 @@ public class QuoteController {
 	@GetMapping("/{quoteId}")
 	public QuoteResponse get(@PathVariable String quoteId) {
 		return quoteService.getQuote(quoteId);
+	}
+
+	@GetMapping
+	public List<QuoteResponse> list() {
+		return quoteService.listQuotes();
 	}
 }
 
