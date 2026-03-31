@@ -42,7 +42,12 @@ public class QuoteRiskEngine {
 			messages.add("Trusted customer tier");
 		}
 
-		boolean approved = score < 40;
+		int threshold = (tier == CustomerTier.GOLD) ? 50 : 40;
+		if (tier == CustomerTier.GOLD) {
+			messages.add("Higher auto-approval threshold applied");
+		}
+
+		boolean approved = score < threshold;
 		if (!approved) {
 			messages.add("Manual review required");
 		}
