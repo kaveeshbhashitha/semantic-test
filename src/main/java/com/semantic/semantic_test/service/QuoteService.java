@@ -30,6 +30,7 @@ public class QuoteService {
 	private final QuoteValidator quoteValidator;
 	private final QuotePricingEngine quotePricingEngine;
 	private final QuoteRiskEngine quoteRiskEngine;
+	private final IdempotencyStore idempotencyStore;
 	private final Clock clock;
 
 	public QuoteService(
@@ -37,17 +38,27 @@ public class QuoteService {
 			QuoteValidator quoteValidator,
 			QuotePricingEngine quotePricingEngine,
 			QuoteRiskEngine quoteRiskEngine,
+			IdempotencyStore idempotencyStore,
 			Clock clock
 	) {
 		this.quoteRepository = quoteRepository;
 		this.quoteValidator = quoteValidator;
 		this.quotePricingEngine = quotePricingEngine;
 		this.quoteRiskEngine = quoteRiskEngine;
+		this.idempotencyStore = idempotencyStore;
 		this.clock = clock;
 	}
 
-	public QuoteResponse createQuote(QuoteRequest request) {
+	public QuoteResponse createQuote(QuoteRequest request, String idempotencyKey) {
 		quoteValidator.validateCreateRequest(request);
+
+		String normalizedKey = normalizeIdempotencyKey(idempotencyKey);
+		if (normalizedKey != null) {
+			var existing = idempotencyStore.getQuoteId(normalizedKey).flatMap(quoteRepository::findById);
+			if (existing.isPresent()) {
+				return toResponse(existing.get());
+			}
+		}
 
 		String quoteId = UUID.randomUUID().toString();
 		Instant now = clock.instant();
@@ -79,11 +90,18 @@ public class QuoteService {
 		);
 
 		quoteRepository.save(quote);
+		if (normalizedKey != null) {
+			idempotencyStore.putIfAbsent(normalizedKey, quoteId);
+		}
 
 		log.info("quote_created quoteId={} customerId={} total={} riskScore={} approved={}",
 				quoteId, request.customerId(), pricing.total(), risk.riskScore(), risk.approved());
 
 		return toResponse(quote);
+	}
+
+	public QuoteResponse createQuote(QuoteRequest request) {
+		return createQuote(request, null);
 	}
 
 	public QuoteResponse getQuote(String quoteId) {
@@ -94,6 +112,14 @@ public class QuoteService {
 
 	public List<QuoteResponse> listQuotes() {
 		return quoteRepository.findAll().stream().map(QuoteService::toResponse).toList();
+	}
+
+	private static String normalizeIdempotencyKey(String key) {
+		if (key == null) {
+			return null;
+		}
+		String trimmed = key.trim();
+		return trimmed.isEmpty() ? null : trimmed;
 	}
 
 	private static QuoteResponse toResponse(Quote quote) {

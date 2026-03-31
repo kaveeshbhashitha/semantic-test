@@ -6,6 +6,7 @@ import com.semantic.semantic_test.service.QuoteService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,8 +25,11 @@ public class QuoteController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public QuoteResponse create(@RequestBody QuoteRequest request) {
-		return quoteService.createQuote(request);
+	public QuoteResponse create(
+			@RequestBody QuoteRequest request,
+			@RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey
+	) {
+		return quoteService.createQuote(request, idempotencyKey);
 	}
 
 	@GetMapping("/{quoteId}")

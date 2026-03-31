@@ -43,7 +43,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>semantic-app-commit-3</finalName>
+		<finalName>semantic-app-commit-5</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
