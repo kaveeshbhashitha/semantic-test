@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class QuoteValidator {
+	private static final int MAX_ITEMS_PER_QUOTE = 20;
+	private static final int MAX_QUANTITY_PER_ITEM = 50;
+
 	public void validateCreateRequest(QuoteRequest request) {
 		List<String> errors = new ArrayList<>();
 		if (request == null) {
@@ -29,6 +32,9 @@ public class QuoteValidator {
 		if (request.items() == null || request.items().isEmpty()) {
 			errors.add("items must not be empty");
 		} else {
+			if (request.items().size() > MAX_ITEMS_PER_QUOTE) {
+				errors.add("items must not exceed " + MAX_ITEMS_PER_QUOTE + " entries");
+			}
 			for (int i = 0; i < request.items().size(); i++) {
 				QuoteItemRequest item = request.items().get(i);
 				if (item == null) {
@@ -48,6 +54,8 @@ public class QuoteValidator {
 				}
 				if (item.quantity() <= 0) {
 					errors.add("items[" + i + "].quantity must be >= 1");
+				} else if (item.quantity() > MAX_QUANTITY_PER_ITEM) {
+					errors.add("items[" + i + "].quantity must not exceed " + MAX_QUANTITY_PER_ITEM);
 				}
 			}
 		}
