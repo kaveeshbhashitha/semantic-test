@@ -54,7 +54,9 @@ public class QuoteService {
 
 		List<QuoteItem> items = new ArrayList<>();
 		for (QuoteItemRequest item : request.items()) {
-			items.add(new QuoteItem(item.sku(), item.category(), item.unitPrice(), item.quantity()));
+			// Normalize SKU for consistent downstream comparisons/audit logs
+			String normalizedSku = item.sku().trim().toUpperCase();
+			items.add(new QuoteItem(normalizedSku, item.category(), item.unitPrice(), item.quantity()));
 		}
 
 		QuotePricing pricing = quotePricingEngine.price(
